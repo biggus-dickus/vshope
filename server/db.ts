@@ -1,12 +1,9 @@
+import type { Options } from 'sequelize'
 import { Sequelize } from 'sequelize'
 
-const db = new Sequelize({
-  database: process.env.DB_NAME,
-  dialect: 'postgres',
-  host: process.env.DB_HOST,
-  password: process.env.DB_PASSWORD,
-  port: Number(process.env.DB_PORT) || 5432,
-  username: process.env.DB_USER,
-})
+import config from './config/db-connect.js'
+
+const env = (process.env.NODE_ENV || 'development') as keyof typeof config
+const db = new Sequelize(config[env] as Options)
 
 export default db
