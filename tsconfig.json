@@ -8,10 +8,8 @@
     "allowJs": true,
 
     "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "noEmit": true,
-
     "skipLibCheck": true,
     "strict": true,
     "noFallthroughCasesInSwitch": true,
