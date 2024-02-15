@@ -28,8 +28,8 @@ module.exports = {
     return Promise.all(passwords).then((hashed) => {
       demoUsers[0].password = hashed[0]
       demoUsers[1].password = hashed[1]
-      return queryInterface.bulkInsert('users', demoUsers)
+      return queryInterface.bulkInsert('Users', demoUsers)
     })
   },
-  down: (queryInterface) => queryInterface.bulkDelete('users', null, {}),
+  down: (queryInterface) => queryInterface.bulkDelete('Users', null, {}),
 }

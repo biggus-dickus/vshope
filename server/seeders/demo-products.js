@@ -31,17 +31,17 @@ const demoProducts = [
 module.exports = {
   async up(queryInterface) {
     await Promise.all([
-      queryInterface.bulkInsert('brands', demoBrands),
-      queryInterface.bulkInsert('categories', demoCategories),
+      queryInterface.bulkInsert('Brands', demoBrands),
+      queryInterface.bulkInsert('Categories', demoCategories),
     ])
-    await queryInterface.bulkInsert('products', demoProducts)
+    await queryInterface.bulkInsert('Products', demoProducts)
   },
 
   async down(queryInterface) {
-    await queryInterface.bulkDelete('products', null, {})
+    await queryInterface.bulkDelete('Products', null, {})
     await Promise.all([
-      queryInterface.bulkDelete('brands', demoBrands),
-      queryInterface.bulkDelete('categories', demoCategories),
+      queryInterface.bulkDelete('Brands', demoBrands),
+      queryInterface.bulkDelete('Categories', demoCategories),
     ])
   },
 }

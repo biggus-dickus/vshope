@@ -1,20 +1,22 @@
 import cors from 'cors'
 import express from 'express'
+import fileUpload from 'express-fileupload'
 import path from 'path'
-
-import './models/models'
 
 import apiRouter from './routes'
 import db from './db'
+import errorHandler from './middleware/error-handling'
 
 const PORT = process.env.PORT || 4242
-
 const app = express()
 
 app.use(cors())
 app.use(express.json())
 app.use(express.static(path.resolve(__dirname, 'static')))
-app.use('/api', apiRouter)
+app.use(fileUpload({}))
+
+app.use('/api/v1', apiRouter)
+app.use(errorHandler)
 
 ;(async function start() {
   try {
