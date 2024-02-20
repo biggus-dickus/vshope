@@ -13,5 +13,5 @@ export interface ICrud<T> {
 
   getMany(...[req, res, next]: CrudParams): Promise<Response<T[]>>
 
-  update(...[req, res, next]: CrudParams): Promise<Response<T>> | never
+  update(...[req, res, next]: CrudParams): Promise<Response<T> | void> | never
 }

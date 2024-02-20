@@ -1,5 +1,6 @@
 export default class ApiError extends Error {
   statusCode: number
+  message: string
 
   constructor(code: number, message: string) {
     super()
@@ -7,19 +8,19 @@ export default class ApiError extends Error {
     this.message = message
   }
 
-  static badRequest(message: string) {
-    return new ApiError(400, message)
+  static badRequest(msg: typeof ApiError.prototype.message) {
+    return new ApiError(400, msg)
   }
 
-  static unauthorized(message = 'Unauthorized') {
-    return new ApiError(401, message)
+  static unauthorized(msg = 'Unauthorized') {
+    return new ApiError(401, msg)
   }
 
-  static forbidden(message: string) {
-    return new ApiError(403, message)
+  static forbidden(msg: typeof ApiError.prototype.message) {
+    return new ApiError(403, msg)
   }
 
-  static internal(message: string) {
-    return new ApiError(500, message)
+  static internal(msg: typeof ApiError.prototype.message) {
+    return new ApiError(500, msg)
   }
 }

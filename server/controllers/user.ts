@@ -1,9 +1,11 @@
 import jwt from 'jsonwebtoken'
+import { z } from 'zod'
 
 import type { CrudParams, ICrud } from './meta'
 import type { RequestWithUser } from '../config/shared-types'
 import type { Role } from '../models/User'
 import type { WhereOptions } from 'sequelize'
+import type { ZodError } from 'zod'
 
 import Cart from '../models/Cart'
 import User from '../models/User'
@@ -12,6 +14,14 @@ import ApiError from '../error/api-error'
 import { getPaginationOptions } from './utils'
 
 const userFields = ['id', 'email', 'firstName', 'lastName', 'role']
+
+const userSchema = z.object({
+  email: z.string().email(),
+  firstName: z.string().min(1).max(50),
+  lastName: z.string().min(1).max(50),
+  password: z.string().min(7).max(50),
+  role: z.enum(['ADMIN', 'USER']).optional().default('USER' as Role),
+}).strict()
 
 const generateJwt = (id: string, email: string, role: Role) => {
   return jwt.sign({ id, email, role }, process.env.JWT_SECRET_KEY as string, {
@@ -22,15 +32,8 @@ const generateJwt = (id: string, email: string, role: Role) => {
 class UserController implements ICrud<User> {
   async create(...[req, res, next]: CrudParams) {
     try {
-      const { email, firstName, lastName, password, role = 'USER' } = req.body
-
-      if (!email || !password) {
-        return next(ApiError.badRequest('Incorrect email or password'))
-      }
-
-      if (!firstName?.trim() || !lastName?.trim()) {
-        return next(ApiError.badRequest('First name and last name must be provided'))
-      }
+      const userInput = userSchema.parse(req.body)
+      const { email, firstName, lastName, password, role = 'USER' } = userInput
 
       if (await User.findOne({ where: { email } })) {
         return next(ApiError.badRequest('User with this email already exists'))
@@ -50,7 +53,8 @@ class UserController implements ICrud<User> {
       const token = generateJwt(user.id, user.email, user.role)
       return res.json({ token })
     } catch (e) {
-      next(ApiError.badRequest((e as Error).message))
+      const flatError = (e as ZodError).flatten()
+      next(ApiError.badRequest(flatError as any))
     }
   }
 
@@ -82,20 +86,36 @@ class UserController implements ICrud<User> {
     return res.json(users)
   }
 
-  async update(...[req, res]: CrudParams) {
-    const { id, ...fields } = req.body
-    const [updateCount] = await User.update(fields, {
-      where: { id },
-    })
+  async update(...[req, res, next]: CrudParams) {
+    try {
+      const updateFields = userSchema.partial().extend({ id: z.number() })
+      const validation = updateFields.safeParse(req.body)
+      if (!validation.success) {
+        return next(ApiError.badRequest(validation.error.flatten() as any))
+      }
 
-    return res.json(updateCount ? req.body : null)
+      const { id, ...fields } = req.body
+      const [updateCount] = await User.update(fields, {
+        where: { id },
+      })
+
+      return res.json(updateCount ? req.body : null)
+    } catch (e) {
+      next(ApiError.internal((e as Error).message))
+    }
   }
 
   async login(...[req, res, next]: CrudParams) {
+    const emailField = z.string().email()
+    const validation = emailField.safeParse(req.body.email)
+    if (!validation.success) {
+      return next(ApiError.badRequest('Invalid email format'))
+    }
+
     const { email, password } = req.body
     const user = await User.findOne({ where: { email } })
 
-    if (!user || !await Bun.password.verify(password, user.password)) {
+    if (!user || !(await Bun.password.verify(password, user.password))) {
       return next(ApiError.badRequest('Invalid email or password'))
     }
 
