@@ -1,0 +1,118 @@
+import jwt from 'jsonwebtoken'
+
+import type { CrudParams, ICrud } from './meta'
+import type { RequestWithUser } from '../config/shared-types'
+import type { Role } from '../models/User'
+import type { WhereOptions } from 'sequelize'
+
+import Cart from '../models/Cart'
+import User from '../models/User'
+
+import ApiError from '../error/api-error'
+import { getPaginationOptions } from './utils'
+
+const userFields = ['id', 'email', 'firstName', 'lastName', 'role']
+
+const generateJwt = (id: string, email: string, role: Role) => {
+  return jwt.sign({ id, email, role }, process.env.JWT_SECRET_KEY as string, {
+    expiresIn: '24h',
+  })
+}
+
+class UserController implements ICrud<User> {
+  async create(...[req, res, next]: CrudParams) {
+    try {
+      const { email, firstName, lastName, password, role = 'USER' } = req.body
+
+      if (!email || !password) {
+        return next(ApiError.badRequest('Incorrect email or password'))
+      }
+
+      if (!firstName?.trim() || !lastName?.trim()) {
+        return next(ApiError.badRequest('First name and last name must be provided'))
+      }
+
+      if (await User.findOne({ where: { email } })) {
+        return next(ApiError.badRequest('User with this email already exists'))
+      }
+
+      const hashedPassword = await Bun.password.hash(password)
+      const user = await User.create({
+        email,
+        firstName,
+        lastName,
+        role,
+        password: hashedPassword,
+      })
+
+      await Cart.create({ userId: user.id })
+
+      const token = generateJwt(user.id, user.email, user.role)
+      return res.json({ token })
+    } catch (e) {
+      next(ApiError.badRequest((e as Error).message))
+    }
+  }
+
+  async getOne(...[req, res]: CrudParams) {
+    const { id } = req.params
+    const product = await User.findOne({
+      where: { id },
+      attributes: userFields,
+    })
+
+    return res.json(product)
+  }
+
+  async getMany(...[req, res]: CrudParams) {
+    const { role } = req.query
+    const { limit, offset } = getPaginationOptions(req.query)
+
+    let where: WhereOptions = {}
+    if (role) {
+      where.role = role
+    }
+
+    const users = await User.findAndCountAll({
+      where,
+      limit,
+      offset,
+      attributes: userFields,
+    })
+    return res.json(users)
+  }
+
+  async update(...[req, res]: CrudParams) {
+    const { id, ...fields } = req.body
+    const [updateCount] = await User.update(fields, {
+      where: { id },
+    })
+
+    return res.json(updateCount ? req.body : null)
+  }
+
+  async login(...[req, res, next]: CrudParams) {
+    const { email, password } = req.body
+    const user = await User.findOne({ where: { email } })
+
+    if (!user || !await Bun.password.verify(password, user.password)) {
+      return next(ApiError.badRequest('Invalid email or password'))
+    }
+
+    const token = generateJwt(user.id, user.email, user.role)
+    return res.json({ token })
+  }
+
+  async refreshToken(...[req, res, next]: CrudParams) {
+    const user = (req as RequestWithUser).user
+    if (!user) {
+      return next(new ApiError(401, 'Unauthorized'))
+    }
+    const token = generateJwt(user?.id, user?.email, user?.role)
+    return res.json({ token })
+  }
+}
+
+const userController = new UserController()
+
+export default userController

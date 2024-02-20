@@ -4,7 +4,7 @@ import { DataTypes } from 'sequelize'
 import Cart from './Cart'
 import Rating from './Rating'
 
-type Role = 'ADMIN' | 'USER'
+export type Role = 'ADMIN' | 'USER'
 
 @Table
 export default class User extends Model {
@@ -21,7 +21,7 @@ export default class User extends Model {
   password!: string
 
   @Column(DataTypes.STRING)
-  role: Role = 'USER'
+  role!: Role
 
   @HasOne(() => Cart)
   cart?: Cart

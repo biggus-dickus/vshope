@@ -15,7 +15,7 @@ const demoCategories = [
 ]
 
 const demoProducts = [
-  { name: 'Coffee Machine', price: 100, rating: 5, img: 'img1.png', createdAt: new Date(), updatedAt: new Date(), categoryId: 1, brandId: 3 },
+  { name: 'Coffee Machine', price: 100, rating: 5, img: 'img1.png', createdAt: new Date(), updatedAt: new Date(), categoryId: 1, brandId: 3, description: 'Very good product, blya budu!' },
   { name: 'Refrigerator', price: 200, rating: 4, img: 'img2.png', createdAt: new Date(), updatedAt: new Date(), categoryId: 1, brandId: 3 },
   { name: 'Laptop', price: 300, rating: 3, img: 'img3.png', createdAt: new Date(), updatedAt: new Date(), categoryId: 2, brandId: 4 },
   { name: 'MacBook Pro', price: 1200, rating: 5, img: 'img11.png', createdAt: new Date(), updatedAt: new Date(), categoryId: 2, brandId: 1 },

@@ -1,9 +1,13 @@
 # vshope
 
-To install dependencies:
+Your typical REST client for an online shop, written in Bun, TypeScript, Express.js and Sequelize. The DB is powered by PostgreSQL.
 
-```bash
-bun install
-```
+Features:
 
-This project was created using `bun init` in bun v1.0.25. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+- JWT-based user authentication and authorisation
+- REST API for CRUD operations with entities (products, categories, users, etc.)
+- Automatic DB seeding
+
+## DB Seeding
+
+Start the server and run `bun --bun seed`.
